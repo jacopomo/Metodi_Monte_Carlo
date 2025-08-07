@@ -111,7 +111,7 @@ sigma_total = sigma_b_vals + sigma_res1_smeared + sigma_res2_smeared
 # -----------------
 
 # Machine instantaneous luminosity: 2e30 cm^-2 s^-1 -> in nb^-1 s^-1
-L_int = 5e-3 * 3600*500 # nb^-1 in 500 hours
+L_int = 5e-3 * 3600*200 # nb^-1 in 200 hours
 
 # Scan strategy: denser near resonances
 M_jpsi = 3.0969
