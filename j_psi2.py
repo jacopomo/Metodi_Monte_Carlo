@@ -100,7 +100,7 @@ E_scan = np.concatenate([
 # MC data generation
 # -----------------
 rng = np.random.default_rng(seed=12345)
-n_mc_samples = 5000
+n_mc_samples = 10000 #10000 for good statistics
 
 def mc_smeared_sigma(E_nom):
     """
@@ -198,7 +198,7 @@ def smear_with_gaussian(y_vals, E_vals, sigma_E):
 # -----------------
 # Setup: theory curves
 # -----------------
-E_vals = np.linspace(2.8, 3.8, 50000)
+E_vals = np.linspace(2.8, 3.8, 100000) #100000 for high resolution
 sigma_bkg = np.array([bhabha(E) for E in E_vals])
 sigma_jpsi = b_acc * sigma_true(E_vals)
 sigma_psip = b_acc * sigma_true(E_vals, M=3.6861, Gamma=0.000294, Gamma_ee=2.33142e-6)
