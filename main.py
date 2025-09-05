@@ -4,6 +4,7 @@ Main entry point for J/psi and psi(2S) cross section scan study.
 """
 
 import numpy as np
+from tqdm import tqdm
 
 import simulation as simu
 
@@ -37,34 +38,37 @@ def generate_pseudo_data(
     """
     sigma_vals = []
     sigma_errs = []
-    for e in e_scan:
+    for e in tqdm(e_scan, desc="Running MC simulation"):
         sigma = simu.mc_sigma_with_isr(e, rng=rng, n_samples=n_samples)
-        err = frac_err * sigma
-        # smear pseudo-data around true value
-        meas = rng.normal(loc=sigma, scale=err)
-        sigma_vals.append(meas)
-        sigma_errs.append(err)
+
+        # Poisson fluctuations
+        n_expected = sigma * simu.l_int
+        n_observed = rng.poisson(n_expected)
+        sigma_observed = n_observed / simu.l_int
+        sigma_err = np.sqrt(n_observed) / simu.l_int if n_observed > 0 else 1.0 / simu.l_int
+     
+        sigma_vals.append(sigma_observed)
+        sigma_errs.append(sigma_err)
     return np.array(sigma_vals), np.array(sigma_errs)
 
 
 def main():
-    # --- energy grid for scan (measured points) ---
-    e_scan = np.linspace(simu.e_min, simu.e_max, simu.n_escan_points)
-
     # --- pseudo-data ---
-    sigma_meas, sigma_err = generate_pseudo_data(simu.global_rng, e_scan)
+    sigma_meas, sigma_err = generate_pseudo_data(simu.global_rng, simu.mc_energies)
+    e_err = np.ones_like(sigma_err) * simu.energy_resolution / np.sqrt(simu.n_mc)  
 
     # --- theory curves on finer grid ---
-    e_theory = np.linspace(simu.e_min, simu.e_max, 400)
-    sigma_noisr_curve = simu.theory_no_isr(e_theory)
-    sigma_isr_curve = simu.theory_isr(e_theory)
+    e_scan = np.linspace(simu.e_min, simu.e_max, simu.n_escan_points)
+    sigma_noisr_curve = simu.theory_no_isr(e_scan)
+    sigma_isr_curve = simu.theory_isr(e_scan)
 
     # --- plotting ---
     simu.plot_scan(
-        e_meas=e_scan,
+        e_meas=simu.mc_energies,
         sigma_meas=sigma_meas,
         sigma_err=sigma_err,
-        e_theory=e_theory,
+        e_err= e_err,
+        e_theory=e_scan,
         sigma_noisr=sigma_noisr_curve,
         sigma_isr=sigma_isr_curve,
         residuals=True,

@@ -53,7 +53,7 @@ def build_isr_cdf_cached(key: Tuple[float, int]):
     s_nom, nx = key
     x_grid = np.logspace(-5.5, np.log10(0.999), nx)
     w_vals = isr_radiator(x_grid, s_nom)
-    integral = np.trapz(w_vals, x_grid)
+    integral = np.trapezoid(w_vals, x_grid)
     if integral <= 0:
         pdf = np.ones_like(w_vals) / w_vals.size
     else:

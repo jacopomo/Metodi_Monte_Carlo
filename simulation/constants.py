@@ -28,16 +28,16 @@ beam_resolution = 0.003     # Beam energy spread (Gaussian sigma) in GeV
 detector_resolution = 0.003 # Detector energy resolution (Gaussian sigma) in GeV
 energy_resolution = float(np.sqrt(beam_resolution**2 + detector_resolution**2))
 
-def acceptance(cos_max: float = cos_cut, dist_func=lambda u: 1 + u**2, norm: bool = True) -> float:
+def acceptance(dist_func=lambda u: 1 + u**2, cos_max: float = cos_cut, norm: bool = True) -> float:
     """
     Geometric acceptance for a given angular cut and angular distribution.
 
     Parameters
     ----------
-    cos_max : float
-        Angular cut (default = cos_cut from constants).
     dist_func : callable
         Angular distribution function of cos(theta).
+    cos_max : float
+        Angular cut (default = cos_cut from constants).
     norm : bool
         Whether to normalize by total integral.
     
@@ -47,7 +47,7 @@ def acceptance(cos_max: float = cos_cut, dist_func=lambda u: 1 + u**2, norm: boo
         Acceptance fraction.
     """
     num = integrate.quad(dist_func, -cos_max, cos_max, epsrel=1e-9)[0]
-    den = integrate.quad(dist_func, -1, 1, epsrel=1e-9)[0] if norm else 1.0
+    den = integrate.quad(dist_func, -1, 1, epsrel=1e-11)[0] if norm else 1.0
     return num / den
 
 
@@ -61,9 +61,19 @@ efficiency = 1.0
 # Simulation defaults
 n_mc = int(1e5)             # Number of MC samples per energy point
 n_quad = 400                # Number of quadrature points for ISR convolution
-e_min = 2.6                 # Minimum energy for scan (GeV)
-e_max = 3.9                 # Maximum energy for scan (GeV)
+e_min = 2.8                 # Minimum energy for scan (GeV)
+e_max = 3.8                 # Maximum energy for scan (GeV)
 n_escan_points = 10000      # Number of energy grid points for cross section calculations
+
+# Heterogeneous energy scan for data simulation
+padding = 0.022  
+mc_energies = np.concatenate([
+    np.linspace(e_min, m_jpsi - padding, 12),                 # below J/ψ
+    np.linspace(m_jpsi - padding, m_jpsi + padding, 50),      # around J/ψ
+    np.linspace(m_jpsi + padding, m_psi2s - padding, 16),     # between resonances
+    np.linspace(m_psi2s - padding, m_psi2s + padding, 20),    # around ψ(2S)
+    np.linspace(m_psi2s + padding, e_max, 6)                  # above ψ(2S)
+])
 
 # RNG
 global_rng = np.random.default_rng(12345)

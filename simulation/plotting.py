@@ -13,6 +13,7 @@ def plot_scan(
     e_meas: np.ndarray,
     sigma_meas: np.ndarray,
     sigma_err: np.ndarray,
+    e_err: np.ndarray,
     e_theory: np.ndarray,
     sigma_noisr: np.ndarray,
     sigma_isr: np.ndarray,
@@ -33,6 +34,8 @@ def plot_scan(
         Measured cross sections [nb].
     sigma_err : array
         Uncertainties on measured cross sections [nb].
+    e_err : array
+        Uncertainties on measured energies [GeV].
     e_theory : array
         Theory energy grid [GeV].
     sigma_noisr : array
@@ -70,7 +73,7 @@ def plot_scan(
         e_meas,
         sigma_meas,
         yerr=sigma_err,
-        xerr=None,  
+        xerr=e_err,  
         fmt=".",
         color="red",
         label="MC pseudo-data",

@@ -11,10 +11,8 @@ from .constants import (
     m_jpsi, gamma_jpsi, gamma_ee_jpsi,
     m_psi2s, gamma_psi2s, gamma_ee_psi2s)
 from .resonance import breit_wigner_sigma
-from .bhabha import build_bhabha_interpolator
+from .bhabha import bhabha_total
 from .isr import sample_isr_x
-
-bhabha_interp = build_bhabha_interpolator()
 
 def mc_sigma_with_isr(
     e_nom: float,
@@ -42,4 +40,4 @@ def mc_sigma_with_isr(
     # Resonances
     sigma_jpsi = acceptance() * breit_wigner_sigma(e_smeared, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
     sigma_psip = acceptance() * breit_wigner_sigma(e_smeared, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
-    return float(np.mean(sigma_jpsi + sigma_psip) + bhabha_interp(e_nom))
+    return float(np.mean(sigma_jpsi + sigma_psip) + bhabha_total(e_nom))

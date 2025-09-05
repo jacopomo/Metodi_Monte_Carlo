@@ -14,41 +14,9 @@ from .constants import (
     m_jpsi, gamma_jpsi, gamma_ee_jpsi,
     m_psi2s, gamma_psi2s, gamma_ee_psi2s)
 from .resonance import breit_wigner_sigma
-from .bhabha import build_bhabha_interpolator
+from .bhabha import bhabha_total
 from .isr import isr_radiator
-
-
-
-def smear_gaussian_fft(sigma: np.ndarray, e_vals: np.ndarray, sigma_gauss: float) -> np.ndarray:
-    """
-    Smear cross section array with a Gaussian resolution using FFT convolution.
-
-    Parameters
-    ----------
-    sigma : ndarray
-        Cross section values on uniform energy grid.
-    e_vals : ndarray
-        Energy grid (must be equally spaced).
-    sigma_gauss : float
-        Gaussian width (standard deviation) in GeV.
-
-    Returns
-    -------
-    smeared : ndarray
-        Gaussian-smeared cross section on same grid.
-    """
-    dE = e_vals[1] - e_vals[0]
-    n = len(sigma)
-
-    # Gaussian kernel on same grid
-    grid = np.arange(-n//2, n//2) * dE
-    kernel = np.exp(-0.5 * (grid / sigma_gauss) ** 2)
-    kernel /= np.sum(kernel)  # normalize
-
-    # FFT convolution
-    smeared = np.real(ifft(fft(sigma) * fft(kernel)))
-    return smeared
-
+from .smearing import smear_gaussian_fft
 
 def theory_no_isr(
     e_vals: np.ndarray,
@@ -80,8 +48,8 @@ def theory_no_isr(
 
     for i, e in it:
         sigma_jpsi = acceptance() * breit_wigner_sigma(e, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
-        sigma_psip = acceptance * breit_wigner_sigma(e, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
-        sigma_res[i] = sigma_jpsi + sigma_psip + build_bhabha_interpolator(e)
+        sigma_psip = acceptance() * breit_wigner_sigma(e, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+        sigma_res[i] = sigma_jpsi + sigma_psip + bhabha_total(e)
 
     # Gaussian smearing via FFT
     return smear_gaussian_fft(sigma_res, e_vals, sigma_gauss)
@@ -103,7 +71,7 @@ def theory_isr(
     sigma_gauss : float
         Gaussian smearing width.
     n_quad : int
-        Number of Gauss–Legendre quadrature nodes for ISR convolution.
+        Number of Gauss-Legendre quadrature nodes for ISR convolution.
     show_progress : bool
         If True, show tqdm progress bar.
 
@@ -141,7 +109,7 @@ def theory_isr(
         if R_norm > 0:
             sigma_accum /= R_norm
 
-        out[i] = sigma_accum + build_bhabha_interpolator(e)
+        out[i] = sigma_accum + bhabha_total(e)
 
     # Gaussian smearing
     return smear_gaussian_fft(out, e_vals, sigma_gauss)
