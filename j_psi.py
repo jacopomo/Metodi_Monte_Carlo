@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-jpsi_isr_sim.py
+jpsi.py
 
 Simulate an e+e- energy scan around the J/ψ and ψ(2S) resonances,
-including Initial-State Radiation (ISR) using a Kuraev–Fadin / Bonneau–Martin
+including Initial-State Radiation (ISR) using a Kuraev-Fadin / Bonneau-Martin
 O(alpha) radiator, and Gaussian beam/detector smearing.
 
 Features:
@@ -56,9 +56,9 @@ L_INT = L_INSTANT_NB_INV_S * T_PER_POINT
 EFFICIENCY = 1.0
 
 # MC defaults (can be overridden via CLI)
-DEFAULT_N_MC_SAMPLES = 100000
-DEFAULT_N_QUAD = 400
-DEFAULT_EGRID_POINTS = 10000
+DEFAULT_N_MC_SAMPLES = 500000
+DEFAULT_N_QUAD = 600
+DEFAULT_EGRID_POINTS = 100000
 
 # RNG
 GLOBAL_RNG = np.random.default_rng(12345)
