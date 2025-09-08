@@ -72,7 +72,7 @@ def main():
         sigma_noisr=sigma_noisr_curve,
         sigma_isr=sigma_isr_curve,
         residuals=True,
-        savepath="scan_plot.png",
+        savepath="resonance_isr.png" if simu.isr_on else "resonance.png",
     )
 
 
