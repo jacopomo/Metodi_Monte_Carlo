@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Optional
 
+from .constants import isr_on
 
 def plot_scan(
     e_meas: np.ndarray,
@@ -92,7 +93,11 @@ def plot_scan(
     ax_main.legend()
 
     if residuals and ax_res is not None:
-        sigma_interp = np.interp(e_meas, e_theory, sigma_isr)
+        if isr_on:
+            sigma_interp = np.interp(e_meas, e_theory, sigma_isr)
+        else:
+            sigma_interp = np.interp(e_meas, e_theory, sigma_noisr)
+
         res = (sigma_meas - sigma_interp) / sigma_err
 
         ax_res.axhline(0, color="black", lw=1)
@@ -105,9 +110,12 @@ def plot_scan(
             capsize=2,
         )
         ax_res.set_xlabel("CM Energy (GeV)")
-        ax_res.set_ylabel("Residuals (nb)")
+        ax_res.set_ylabel("Normalized residuals (nb)")
         ax_res.grid(True, ls="--", alpha=0.6)
 
+        print(f"Chi2: {np.sum(res**2):.2f}")
+        print(f"Degrees of freedom: {len(res) - 1}")
+        print(f"Chi2/ndf: {np.sum(res**2)/(len(res)-1):.2f}")
     fig.tight_layout()
     if savepath:
         fig.savefig(savepath, dpi=150)

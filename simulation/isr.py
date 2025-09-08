@@ -1,93 +1,78 @@
 # jpsi/simulation/isr.py
+
 """
-Initial-State Radiation (ISR) radiator functions and sampling.
-Bonneau-Martin / Kuraev-Fadin O(alpha).
+Initial-State Radiation (ISR) radiator distribution at O(alpha).
+Bonneau-Martin / Kuraev-Fadin formulation.
+
+Here we construct a universal normalized PDF and CDF that are independent
+of the nominal center-of-mass energy s (lowest order).
 """
 
 import numpy as np
-from functools import lru_cache
 from typing import Tuple
+from .constants import x_grid, m_e_gev
 
-from .constants import alpha, m_e_gev
-
-
-def isr_radiator(x, s):
+def isr_pdf(x: np.ndarray) -> np.ndarray:
     """
-    ISR radiator function at O(alpha).
+    Normalized ISR probability density function (universal).
+
+    The dependence on s cancels out, so this PDF is the same
+    for all energies.
 
     Parameters
     ----------
     x : array-like
-        Fractional energy loss.
-    s : float
-        Nominal invariant mass squared [GeV^2].
+        Fractional energy loss (0 < x < 1).
 
     Returns
     -------
     ndarray
-        Radiator values (unnormalized).
+        Normalized PDF values.
     """
     x = np.asarray(x)
-    L = np.log(s / m_e_gev**2)
-    pref = alpha / np.pi
-    safe_x = np.where(x <= 0.0, 1e-300, x) # avoid division by zero
-    val = pref * ((1 + (1 - x)**2) / safe_x * (L - 1) - x)
-    return np.clip(val, 0.0, None)
+    safe_x = np.where(x <= 0.0, 1e-300, x)
+    base = (1 + (1 - x) ** 2) / safe_x
+    # normalize numerically on [xmin, xmax]
+    grid = x_grid
+    base_grid = (1 + (1 - grid) ** 2) / grid
+    integral = np.trapezoid(base_grid, grid)
+    return base / integral
 
 
-@lru_cache(maxsize=256)
-def build_isr_cdf_cached(key: Tuple[float, int]):
+def isr_cdf() -> Tuple[np.ndarray, np.ndarray]:
     """
-    Build and cache ISR CDF on a log-spaced x-grid.
-
-    Parameters
-    ----------
-    key : tuple
-        (s_nom, nx)
+    Build ISR CDF on a log-spaced x-grid.
 
     Returns
     -------
     x_grid : ndarray
+        Energy-loss fractions.
     cdf : ndarray
+        Normalized cumulative distribution.
     """
-    s_nom, nx = key
-    x_grid = np.logspace(-5.5, np.log10(0.999), nx)
-    w_vals = isr_radiator(x_grid, s_nom)
-    integral = np.trapezoid(w_vals, x_grid)
-    if integral <= 0:
-        pdf = np.ones_like(w_vals) / w_vals.size
-    else:
-        pdf = w_vals / integral
+    pdf_vals = isr_pdf(x_grid)
     dx = np.diff(np.concatenate(([0.0], x_grid)))
-    cdf = np.cumsum(pdf * dx)
+    cdf = np.cumsum(pdf_vals * dx)
     cdf /= cdf[-1]
     return x_grid, cdf
 
 
-def sample_isr_x(s_nom: float, rng, n_samples: int,
-                 nx: int = 4000, round_digits: int = 6):
+def sample_isr_x(rng: np.random.Generator, n_samples: int) -> np.ndarray:
     """
-    Sample ISR fractions x.
+    Sample ISR energy-loss fractions x ~ PDF.
 
     Parameters
     ----------
-    s_nom : float
-        Nominal invariant mass squared [GeV^2].
     rng : np.random.Generator
         Random number generator.
     n_samples : int
         Number of samples.
-    nx : int
-        Number of x grid points for CDF.
-    round_digits : int
-        Precision for cache key.
 
     Returns
     -------
     ndarray
-        ISR energy fractions x.
+        ISR energy-loss fractions x.
     """
-    key = (round(float(s_nom), round_digits), nx)
-    x_grid, cdf_grid = build_isr_cdf_cached(key)
-    us = rng.random(n_samples)
-    return np.interp(us, cdf_grid, x_grid)
+    x_grid, cdf = isr_cdf()
+    us = rng.random(size=n_samples)
+    return np.interp(us, cdf, x_grid)

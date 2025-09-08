@@ -13,7 +13,7 @@ def generate_pseudo_data(
     rng,
     e_scan: np.ndarray,
     n_samples: int = simu.n_mc,
-    frac_err: float = 0.05,
+    isr: bool = simu.isr_on,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate pseudo-data by MC sampling cross sections at scan energies.
@@ -26,8 +26,8 @@ def generate_pseudo_data(
         Energies [GeV] at which to simulate measurements.
     n_samples : int
         Number of MC samples per energy.
-    frac_err : float
-        Fractional uncertainty (controls pseudo error bars).
+    isr : bool
+        Whether to include ISR effects in MC simulation.
 
     Returns
     -------
@@ -39,7 +39,7 @@ def generate_pseudo_data(
     sigma_vals = []
     sigma_errs = []
     for e in tqdm(e_scan, desc="Running MC simulation"):
-        sigma = simu.mc_sigma_with_isr(e, rng=rng, n_samples=n_samples)
+        sigma = simu.mc_sigma(e, rng=rng, n_samples=n_samples, isr=isr)
 
         # Poisson fluctuations
         n_expected = sigma * simu.l_int
@@ -54,7 +54,7 @@ def generate_pseudo_data(
 
 def main():
     # --- pseudo-data ---
-    sigma_meas, sigma_err = generate_pseudo_data(simu.global_rng, simu.mc_energies)
+    sigma_meas, sigma_err = generate_pseudo_data(simu.global_rng, simu.mc_energies, isr=simu.isr_on)
     e_err = np.ones_like(sigma_err) * simu.energy_resolution / np.sqrt(simu.n_mc)  
 
     # --- theory curves on finer grid ---

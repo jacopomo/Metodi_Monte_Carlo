@@ -5,9 +5,8 @@ Resonance cross section model (Breit-Wigner).
 """
 
 import numpy as np
-from scipy import integrate
 
-from .constants import gev2_to_nb, cos_cut
+from .constants import gev2_to_nb
 
 def breit_wigner_sigma(E: np.ndarray, M: float, Gamma: float, Gamma_ee: float) -> np.ndarray:
     """

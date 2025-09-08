@@ -59,11 +59,11 @@ l_int = l_instant_nb * t_per_point      # Integrated luminosity per point in nb^
 efficiency = 1.0
 
 # Simulation defaults
-n_mc = int(1e5)             # Number of MC samples per energy point
-n_quad = 400                # Number of quadrature points for ISR convolution
-e_min = 2.8                 # Minimum energy for scan (GeV)
-e_max = 3.8                 # Maximum energy for scan (GeV)
-n_escan_points = 10000      # Number of energy grid points for cross section calculations
+n_mc = int(1e5)                                     # Number of MC samples per energy point
+e_min = 2.8                                         # Minimum energy for scan (GeV)
+e_max = 3.8                                         # Maximum energy for scan (GeV)
+n_escan_points = int(1e4)                           # Number of energy grid points for cross section calculations
+x_grid = np.logspace(-8, np.log10(0.999), 50000)    # ISR x grid for PDF/CDF
 
 # Heterogeneous energy scan for data simulation
 padding = 0.022  
@@ -75,5 +75,6 @@ mc_energies = np.concatenate([
     np.linspace(m_psi2s + padding, e_max, 6)                  # above ψ(2S)
 ])
 
-# RNG
 global_rng = np.random.default_rng(12345)
+
+isr_on = True      # Whether to include ISR effects in MC simulation

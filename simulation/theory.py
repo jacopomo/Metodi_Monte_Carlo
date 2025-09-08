@@ -5,17 +5,16 @@ Theory cross section calculations (with/without ISR, Gaussian smearing).
 """
 
 import numpy as np
-from scipy.fft import fft, ifft
 from tqdm import tqdm
 
 
 from .constants import (
-    n_quad, energy_resolution, acceptance,
-    m_jpsi, gamma_jpsi, gamma_ee_jpsi,
+    energy_resolution, acceptance,
+    m_jpsi, gamma_jpsi, gamma_ee_jpsi, x_grid,
     m_psi2s, gamma_psi2s, gamma_ee_psi2s)
 from .resonance import breit_wigner_sigma
 from .bhabha import bhabha_total
-from .isr import isr_radiator
+from .isr import isr_pdf
 from .smearing import smear_gaussian_fft
 
 def theory_no_isr(
@@ -54,15 +53,13 @@ def theory_no_isr(
     # Gaussian smearing via FFT
     return smear_gaussian_fft(sigma_res, e_vals, sigma_gauss)
 
-
 def theory_isr(
     e_vals: np.ndarray,
     sigma_gauss: float = energy_resolution,
-    n_quad: int = n_quad,
     show_progress: bool = True,
 ) -> np.ndarray:
     """
-    Compute theory cross section with ISR (via radiator convolution) and Gaussian smearing.
+    Compute theory cross section with ISR (via precomputed ISR PDF) and Gaussian smearing.
 
     Parameters
     ----------
@@ -70,8 +67,6 @@ def theory_isr(
         Energy scan values.
     sigma_gauss : float
         Gaussian smearing width.
-    n_quad : int
-        Number of Gauss-Legendre quadrature nodes for ISR convolution.
     show_progress : bool
         If True, show tqdm progress bar.
 
@@ -80,36 +75,24 @@ def theory_isr(
     sigma_isr : ndarray
         ISR+Gaussian smeared cross section values.
     """
-    # Gauss–Legendre quadrature nodes on [0,1]
-    x_nodes, w_nodes = np.polynomial.legendre.leggauss(n_quad)
-    x_nodes = 0.5 * (x_nodes + 1.0)
-    w_nodes = 0.5 * w_nodes
 
     out = np.zeros_like(e_vals)
     it = enumerate(e_vals)
     if show_progress:
         it = tqdm(it, total=len(e_vals), desc="Theory with ISR", unit="pt")
 
-    for i, e in it:
-        s_nom = e**2
-        R_vals = isr_radiator(x_nodes, s_nom)
-        R_norm = np.sum(w_nodes * R_vals)
+    for i, E_nom in it:
+        E_eff = np.sqrt((1.0 - x_grid) * E_nom**2)
 
-        sigma_accum = 0.0
-        for x, w, R in zip(x_nodes, w_nodes, R_vals):
-            s_eff = (1.0 - x) * s_nom
-            if s_eff <= 0:
-                continue
-            e_eff = np.sqrt(s_eff)
+        # Evaluate resonances
+        sigma_jpsi = breit_wigner_sigma(E_eff, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
+        sigma_psip = breit_wigner_sigma(E_eff, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
 
-            sj = acceptance() * breit_wigner_sigma(e_eff, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
-            sp = acceptance() * breit_wigner_sigma(e_eff, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
-            sigma_accum += w * R * (sj + sp)
+        # Convolve with ISR PDF using trapezoidal integration
+        sigma_isr_val = np.trapz(isr_pdf(x_grid) * (sigma_jpsi + sigma_psip), x_grid)
 
-        if R_norm > 0:
-            sigma_accum /= R_norm
-
-        out[i] = sigma_accum + bhabha_total(e)
+        # Add Bhabha contribution
+        out[i] =  acceptance() * sigma_isr_val + bhabha_total(E_nom)
 
     # Gaussian smearing
     return smear_gaussian_fft(out, e_vals, sigma_gauss)
