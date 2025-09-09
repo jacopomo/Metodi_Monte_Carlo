@@ -28,11 +28,11 @@ def smear_gaussian_fft(y_vals: np.ndarray, e_vals: np.ndarray,
     """
     if len(e_vals) < 2:
         return y_vals
-    dE = e_vals[1] - e_vals[0]
-    pad = int(max(1, np.ceil(3 * sigma_e / dE)))
+    de = e_vals[1] - e_vals[0]
+    pad = int(max(1, np.ceil(3 * sigma_e / de)))
     y_pad = np.pad(y_vals, pad, mode="edge")
     idx = np.arange(-len(y_pad) // 2, len(y_pad) // 2)
-    kernel = np.exp(-0.5 * ((idx * dE) / sigma_e) ** 2)
+    kernel = np.exp(-0.5 * ((idx * de) / sigma_e) ** 2)
     kernel /= kernel.sum()
     conv = signal.fftconvolve(y_pad, kernel, mode="same")
     conv = conv[pad:-pad]

@@ -6,21 +6,21 @@ Resonance cross section model (Breit-Wigner).
 
 import numpy as np
 
-from .constants import gev2_to_nb
+from .constants import GEV2_TO_NB
 
-def breit_wigner_sigma(E: np.ndarray, M: float, Gamma: float, Gamma_ee: float) -> np.ndarray:
+def breit_wigner_sigma(e: np.ndarray, m: float, gamma: float, gamma_ee: float) -> np.ndarray:
     """
     Breit-Wigner cross section for a vector resonance.
 
     Parameters
     ----------
-    E : array-like
+    e : array-like
         Center-of-mass energy [GeV].
-    M : float
+    m : float
         Resonance mass [GeV].
-    Gamma : float
+    gamma : float
         Resonance width [GeV].
-    Gamma_ee : float
+    gamma_ee : float
         Electron partial width [GeV].
 
     Returns
@@ -29,7 +29,7 @@ def breit_wigner_sigma(E: np.ndarray, M: float, Gamma: float, Gamma_ee: float) -
         Cross section in nb.
     """
     # PDG Breit–Wigner formula (simplified form, no interference)
-    s = E**2
-    num = 12 * np.pi * Gamma_ee**2
-    den = (s - M**2) ** 2 + (M * Gamma) ** 2
-    return (num / den) * gev2_to_nb  
+    s = e**2
+    num = 12 * np.pi * gamma_ee**2
+    den = (s - m**2) ** 2 + (m * gamma) ** 2
+    return (num / den) * GEV2_TO_NB

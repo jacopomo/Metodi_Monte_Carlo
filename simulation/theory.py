@@ -10,10 +10,10 @@ from tqdm import tqdm
 
 from .constants import (
     energy_resolution, acceptance,
-    m_jpsi, gamma_jpsi, gamma_ee_jpsi, x_grid,
-    m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+    M_JPSI, GAMMA_JPSI, GAMMA_EE_JPSI, x_grid,
+    M_PSI2S, GAMMA_PSI2S, GAMMA_EE_PSI2S)
 from .resonance import breit_wigner_sigma
-from .bhabha import bhabha_total
+from .background import bhabha_total
 from .isr import isr_pdf
 from .smearing import smear_gaussian_fft
 
@@ -46,8 +46,8 @@ def theory_no_isr(
         it = tqdm(it, total=len(e_vals), desc="Theory no ISR", unit="pt")
 
     for i, e in it:
-        sigma_jpsi = acceptance() * breit_wigner_sigma(e, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
-        sigma_psip = acceptance() * breit_wigner_sigma(e, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+        sigma_jpsi = acceptance() * breit_wigner_sigma(e, M_JPSI, GAMMA_JPSI, GAMMA_EE_JPSI)
+        sigma_psip = acceptance() * breit_wigner_sigma(e, M_PSI2S, GAMMA_PSI2S, GAMMA_EE_PSI2S)
         sigma_res[i] = sigma_jpsi + sigma_psip + bhabha_total(e)
 
     # Gaussian smearing via FFT
@@ -81,18 +81,18 @@ def theory_isr(
     if show_progress:
         it = tqdm(it, total=len(e_vals), desc="Theory with ISR", unit="pt")
 
-    for i, E_nom in it:
-        E_eff = np.sqrt((1.0 - x_grid) * E_nom**2)
+    for i, e_nom in it:
+        e_eff = np.sqrt((1.0 - x_grid) * e_nom**2)
 
         # Evaluate resonances
-        sigma_jpsi = breit_wigner_sigma(E_eff, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
-        sigma_psip = breit_wigner_sigma(E_eff, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+        sigma_jpsi = breit_wigner_sigma(e_eff, M_JPSI, GAMMA_JPSI, GAMMA_EE_JPSI)
+        sigma_psip = breit_wigner_sigma(e_eff, M_PSI2S, GAMMA_PSI2S, GAMMA_EE_PSI2S)
 
         # Convolve with ISR PDF using trapezoidal integration
         sigma_isr_val = np.trapz(isr_pdf(x_grid) * (sigma_jpsi + sigma_psip), x_grid)
 
         # Add Bhabha contribution
-        out[i] =  acceptance() * sigma_isr_val + bhabha_total(E_nom)
+        out[i] =  acceptance() * sigma_isr_val + bhabha_total(e_nom)
 
     # Gaussian smearing
     return smear_gaussian_fft(out, e_vals, sigma_gauss)

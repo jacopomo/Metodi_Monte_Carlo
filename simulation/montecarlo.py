@@ -7,17 +7,17 @@ Monte Carlo cross section estimators with ISR and Gaussian smearing.
 import numpy as np
 
 from .constants import (
-    n_mc, energy_resolution, global_rng, acceptance,
-    m_jpsi, gamma_jpsi, gamma_ee_jpsi,
-    m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+    N_MC, energy_resolution, global_rng, acceptance,
+    M_JPSI, GAMMA_JPSI, GAMMA_EE_JPSI,
+    M_PSI2S, GAMMA_PSI2S, GAMMA_EE_PSI2S)
 from .resonance import breit_wigner_sigma
-from .bhabha import bhabha_total
+from .background import bhabha_total
 from .isr import sample_isr_x
 
 def mc_sigma(
     e_nom: float,
     rng=global_rng,
-    n_samples: int = n_mc,
+    n_samples: int = N_MC,
     isr: bool = True,
 ) -> float:
     """
@@ -53,6 +53,6 @@ def mc_sigma(
     e_smeared = rng.normal(loc=e_eff, scale=energy_resolution)
 
     # Resonances
-    sigma_jpsi = acceptance() * breit_wigner_sigma(e_smeared, m_jpsi, gamma_jpsi, gamma_ee_jpsi)
-    sigma_psip = acceptance() * breit_wigner_sigma(e_smeared, m_psi2s, gamma_psi2s, gamma_ee_psi2s)
+    sigma_jpsi = acceptance() * breit_wigner_sigma(e_smeared, M_JPSI, GAMMA_JPSI, GAMMA_EE_JPSI)
+    sigma_psip = acceptance() * breit_wigner_sigma(e_smeared, M_PSI2S, GAMMA_PSI2S, GAMMA_EE_PSI2S)
     return float(np.mean(sigma_jpsi + sigma_psip) + bhabha_total(e_nom))

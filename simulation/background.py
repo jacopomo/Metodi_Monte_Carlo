@@ -1,13 +1,12 @@
-# jpsi/simulation/bhabha.py
+# jpsi/simulation/background.py
 
 """
 Bhabha scattering cross section and precomputed interpolator.
 """
 
 import numpy as np
-from scipy import interpolate
 
-from .constants import alpha, gev2_to_nb, cos_cut, e_min, e_max, n_escan_points, acceptance
+from .constants import ALPHA, GEV2_TO_NB, COS_CUT, acceptance
 
 
 def bhabha_integrand(cos_theta: float, s: float) -> float:
@@ -31,7 +30,7 @@ def bhabha_integrand(cos_theta: float, s: float) -> float:
     return (s**2 + u**2) / (t**2) + (t**2 + u**2) / (s**2) + 2 * u**2 / (s * t)
 
 
-def bhabha_total(E_cm: float, cos_max: float = cos_cut) -> float:
+def bhabha_total(e_cm: float, cos_max: float = COS_CUT) -> float:
     """
     Total Bhabha cross section (nb) with |cos(theta)| < cos_min cut.
 
@@ -40,13 +39,13 @@ def bhabha_total(E_cm: float, cos_max: float = cos_cut) -> float:
     E_cm : float
         Center-of-mass energy [GeV].
     cos_min : float
-        Angular cut (default = cos_cut from constants).
+        Angular cut (default = COS_CUT from constants).
 
     Returns
     -------
     sigma : float
         Cross section [nb].
     """
-    s = E_cm**2
+    s = e_cm**2
     integral = acceptance(dist_func=lambda c: bhabha_integrand(c, s), cos_max=cos_max, norm=False)
-    return (np.pi * alpha**2 / s) * integral * gev2_to_nb
+    return (np.pi * ALPHA**2 / s) * integral * GEV2_TO_NB

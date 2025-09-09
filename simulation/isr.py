@@ -8,9 +8,10 @@ Here we construct a universal normalized PDF and CDF that are independent
 of the nominal center-of-mass energy s (lowest order).
 """
 
-import numpy as np
 from typing import Tuple
-from .constants import x_grid, m_e_gev
+import numpy as np
+
+from .constants import x_grid
 
 def isr_pdf(x: np.ndarray) -> np.ndarray:
     """
@@ -73,6 +74,6 @@ def sample_isr_x(rng: np.random.Generator, n_samples: int) -> np.ndarray:
     ndarray
         ISR energy-loss fractions x.
     """
-    x_grid, cdf = isr_cdf()
+    _, cdf = isr_cdf()
     us = rng.random(size=n_samples)
     return np.interp(us, cdf, x_grid)
