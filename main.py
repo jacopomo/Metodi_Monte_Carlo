@@ -89,7 +89,7 @@ def main():
         sigma_isr=sigma_isr_curve,
         residuals=True,
         isr_on=isr_on,
-        savepath="resonance_isr.png" if isr_on else "resonance.png",
+        savepath="./figures/resonance_isr.png" if isr_on else "resonance.png",
     )
 
     simu.subplot_scan(
@@ -103,7 +103,7 @@ def main():
         resonance_windows=[(3.07, 3.13), (3.66, 3.72)],
         residuals=True,
         isr_on=isr_on,
-        savepath="resonance_subplots.png"
+        savepath="./figures/resonance_subplots.png"
     )
 
 
