@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument("--points", type=int, default=simu.N_ESCAN_POINTS,
                         help=f"Number of theory scan points (default: {simu.N_ESCAN_POINTS})")
     parser.add_argument("--seed", type=int, default=None,
-                        help=f"Random seed (default: {simu.global_rng})")
+                        help=f"Random seed (default: 12345)")
 
     return parser.parse_args()
 
