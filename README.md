@@ -33,9 +33,13 @@ python main.py --n_mc 50000 --points 2000 --no-isr --seed 1234
 
 Available options:
 --n-mc (int): Number of MC samples per scan point
+
 --no-isr: Disable ISR effects in simulation
+
 --n-escan-points (int): Number of theory points for smooth curves
+
 --seed (int): Random seed for reproducibility
+
 --help, -h: Show help message and exit
 
 
