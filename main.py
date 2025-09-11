@@ -5,6 +5,10 @@ Main entry point for J/psi and psi(2S) cross section scan study.
 
 import argparse
 import numpy as np
+import os
+import pandas as pd
+from scipy.interpolate import interp1d
+
 from tqdm import tqdm
 
 import simulation as simu
@@ -73,10 +77,29 @@ def main():
                                                  isr=isr_on)
     e_err = np.ones_like(sigma_err) * simu.energy_resolution / np.sqrt(args.n_mc)
 
-    # --- theory curves on finer grid ---
-    e_scan = np.linspace(simu.E_MIN, simu.E_MAX, args.points)
-    sigma_noisr_curve = simu.theory_no_isr(e_scan)
-    sigma_isr_curve = simu.theory_isr(e_scan)
+
+    filename = "./simulation/theory_curves.csv"
+    if not os.path.exists(filename):
+    # Compute a very fine theory scan once, from which we will interpolate
+        e_scan_fine = np.linspace(simu.E_MIN, simu.E_MAX, int(1e6))
+        sigma_noisr_curve = simu.theory_no_isr(e_scan_fine)
+        sigma_isr_curve = simu.theory_isr(e_scan_fine)
+
+        df = pd.DataFrame({"e_scan_fine": e_scan_fine, "sigma_noisr": sigma_noisr_curve, "sigma_isr": sigma_isr_curve})
+        df.to_csv(filename, index=False)
+    else:
+        pass
+
+    # Load from CSV
+    df = pd.read_csv(filename)
+    e_scan_fine = df["e_scan_fine"].to_numpy()
+    sigma_noisr_curve = df["sigma_noisr"].to_numpy()
+    sigma_isr_curve = df["sigma_isr"].to_numpy()
+
+    spline_noisr = interp1d(e_scan_fine, sigma_noisr_curve, kind="cubic")
+    spline_isr = interp1d(e_scan_fine, sigma_isr_curve, kind="cubic")
+
+    e_scan = np.linspace(simu.E_MIN, simu.E_MAX, simu.N_ESCAN_POINTS)
 
     # --- plotting ---
     simu.plot_scan(
@@ -85,8 +108,8 @@ def main():
         sigma_err=sigma_err,
         e_err= e_err,
         e_theory=e_scan,
-        sigma_noisr=sigma_noisr_curve,
-        sigma_isr=sigma_isr_curve,
+        sigma_noisr=spline_noisr(e_scan),
+        sigma_isr=spline_isr(e_scan),
         residuals=True,
         isr_on=isr_on,
         savepath="./figures/resonance_isr.png" if isr_on else "resonance.png",
@@ -98,8 +121,8 @@ def main():
         sigma_err=sigma_err,
         e_err= e_err,
         e_theory=e_scan,
-        sigma_noisr=sigma_noisr_curve,
-        sigma_isr=sigma_isr_curve,
+        sigma_noisr=spline_noisr(e_scan),
+        sigma_isr=spline_isr(e_scan),
         resonance_windows=[(3.07, 3.13), (3.66, 3.72)],
         residuals=True,
         isr_on=isr_on,
