@@ -81,7 +81,7 @@ def main():
     filename = "./simulation/theory_curves.csv"
     if not os.path.exists(filename):
     # Compute a very fine theory scan once, from which we will interpolate
-        e_scan_fine = np.linspace(simu.E_MIN, simu.E_MAX, int(1e6))
+        e_scan_fine = np.linspace(simu.E_MIN, simu.E_MAX, int(1e5))
         sigma_noisr_curve = simu.theory_no_isr(e_scan_fine)
         sigma_isr_curve = simu.theory_isr(e_scan_fine)
 
